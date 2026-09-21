@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MedicMitra{% endblock %}</title>
+    <style>
+        :root {
+            --primary-blue: #2B6CB0;
+            --light-blue: #EBF8FF;
+            --dark-text: #2D3748;
+            --gray-bg: #F7FAFC;
+            --success-green: #48BB78;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--gray-bg); color: var(--dark-text); }
+        
+        header {
+            background-color: white; padding: 1rem 5%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        
+        .brand-name { font-size: 1.8rem; font-weight: bold; color: var(--primary-blue); text-decoration: none;}
+        nav ul { list-style: none; display: flex; gap: 2rem; }
+        nav a { text-decoration: none; color: var(--dark-text); font-weight: 500; transition: color 0.3s; }
+        nav a:hover { color: var(--primary-blue); }
+        
+        .container { padding: 3rem 5%; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .btn {
+            padding: 0.8rem 1.5rem; background-color: var(--primary-blue); color: white;
+            border: none; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block;
+        }
+        .btn:hover { background-color: #2C5282; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('index') }}" class="brand-name">MedicMitra</a>
+        <nav>
+            <ul>
+                {% block nav_links %}
+                <li><a href="{{ url_for('index') }}#home">Home</a></li>
+                <li><a href="{{ url_for('index') }}#about">About</a></li>
+                {% endblock %}
+            </ul>
+        </nav>
+    </header>
+    
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

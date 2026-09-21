@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | MedicMitra{% endblock %}
+
+{% block nav_links %}
+<li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+<li><a href="{{ url_for('index') }}">Logout</a></li>
+{% endblock %}
+
+{% block content %}
+<style>
+    .upload-area {
+        border: 2px dashed #CBD5E0;
+        border-radius: 10px;
+        padding: 4rem 2rem;
+        text-align: center;
+        background-color: #FAFCFF;
+        margin-bottom: 2rem;
+        cursor: pointer;
+    }
+    .supported-formats { font-size: 0.9rem; color: #718096; margin-top: 1rem; }
+    .guidelines { margin-top: 2rem; }
+    .guidelines li { margin-bottom: 0.5rem; margin-left: 1.5rem; }
+</style>
+
+<h2>Doctor Dashboard</h2>
+<p style="margin-bottom: 2rem; color: #4A5568;">Upload a patient scan to initiate AI-assisted analysis.</p>
+
+<div class="card">
+    <form action="{{ url_for('analyze') }}" method="POST" enctype="multipart/form-data">
+        <div class="upload-area" onclick="document.getElementById('file-upload').click()">
+            <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Click to Upload Medical Image</h3>
+            <p>or drag and drop file here</p>
+            <p class="supported-formats">Focus on supported X-ray, CT, and MRI images[cite: 1].</p>
+            <input type="file" id="file-upload" name="scan_image" style="display: none;" accept="image/*" required>
+        </div>
+        <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem;">Run Analysis Pipeline</button>
+    </form>
+</div>
+
+<div class="card guidelines" style="margin-top: 2rem;">
+    <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">Pipeline Overview</h3>
+    <ul>
+        <li><strong>Validation:</strong> The system checks format, integrity, dimensions, and quality before processing[cite: 1].</li>
+        <li><strong>Preprocessing:</strong> Images undergo resizing, normalization, enhancement, and registration[cite: 1].</li>
+        <li><strong>Explainability:</strong> The system generates Grad-CAM heatmaps, selected feature maps, and activation statistics to show how the CNN analyses the image[cite: 1].</li>
+    </ul>
+</div>
+{% endblock %}

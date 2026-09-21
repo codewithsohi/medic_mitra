@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Results | MedicMitra{% endblock %}
+
+{% block nav_links %}
+<li><a href="{{ url_for('dashboard') }}">New Analysis</a></li>
+<li><a href="{{ url_for('index') }}">Logout</a></li>
+{% endblock %}
+
+{% block content %}
+<style>
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+    .image-box { width: 100%; height: 300px; background-color: #EDF2F7; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #A0AEC0; }
+    .stat-row { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #E2E8F0; }
+    .highlight { font-size: 1.5rem; font-weight: bold; color: var(--primary-blue); }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Analysis Results</h2>
+    <!-- Placeholder for report generation via ReportLab -->
+    <button class="btn">Generate PDF Report</button> 
+</div>
+
+<div class="results-grid">
+    <!-- Visual Explanations -->
+    <div class="card">
+        <h3 style="margin-bottom: 1rem;">Explainability Module</h3>
+        <p style="font-size: 0.9rem; color: #718096; margin-bottom: 1rem;">Grad-CAM heatmaps showing CNN attention[cite: 1].</p>
+        <div class="image-box">
+            [Grad-CAM Visualization Placeholder]
+        </div>
+    </div>
+
+    <!-- Prediction & Reliability Stats -->
+    <div class="card">
+        <h3 style="margin-bottom: 1rem;">Prediction & Reliability</h3>
+        
+        <div class="stat-row">
+            <span style="font-weight: 500;">Predicted Condition:</span>
+            <span class="highlight">Pneumonia</span>
+        </div>
+        
+        <div class="stat-row">
+            <span style="font-weight: 500;">Confidence Score:</span>
+            <span class="highlight" style="color: var(--success-green);">94.2%</span>
+        </div>
+        
+        <div class="stat-row">
+            <span style="font-weight: 500;">Average Activation:</span>
+            <span>0.78</span>
+        </div>
+        
+        <div class="stat-row">
+            <span style="font-weight: 500;">Prediction Stability:</span>
+            <span>High</span>
+        </div>
+        
+        <div style="margin-top: 1.5rem; padding: 1rem; background-color: var(--light-blue); border-radius: 5px;">
+            <p style="font-size: 0.9rem; color: #2C5282;">
+                <strong>Interpretation:</strong> The reliability module confirms high prediction confidence based on image quality, attention within the relevant organ region, and prediction stability[cite: 1].
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
