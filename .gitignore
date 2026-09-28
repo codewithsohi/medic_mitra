@@ -1,3 +1,32 @@
+# Python & Virtual Environments
 venv/
-.env
+.venv/
+env/
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Environment Variables & Configuration
+.env
+.env.local
+.env.*.local
+
+# Database & Instances (Supabase / SQLite)
+instance/
+*.db
+*.sqlite3
+
+# Project Custom Skills & Agent Artifacts
+.agents/
+.agent/
+skills/
+
+# Uploaded Medical Scans
+static/uploads/*
+!static/uploads/.gitkeep
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

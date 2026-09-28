@@ -1,49 +1,341 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard | MedicMitra{% endblock %}
+{% block title %}Clinical Dashboard | MedicMitra{% endblock %}
 
-{% block nav_links %}
-<li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-<li><a href="{{ url_for('index') }}">Logout</a></li>
+{% block nav %}
+<header class="workspace-topbar">
+    <div class="workspace-topbar-inner">
+        <div class="topbar-left">
+            <a href="{{ url_for('dashboard') }}" class="brand-logo" style="font-size: 1.15rem;">
+                <div class="brand-badge-icon" style="width: 32px; height: 32px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <span>Medic<span style="color: var(--teal-600);">Mitra</span></span>
+            </a>
+            
+            <div class="topbar-breadcrumbs">
+                <span>/</span>
+                <span style="color: var(--slate-700); font-weight: 600;">Clinical Workspace</span>
+                <span>/</span>
+                <span>Imaging Intake</span>
+            </div>
+        </div>
+
+        <div class="topbar-right">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="badge badge-emerald">
+                    <span class="status-dot dot-green"></span>
+                    AI Pipeline Active
+                </span>
+            </div>
+
+            <div class="doctor-profile-badge">
+                <div class="doctor-avatar">
+                    {{ current_user.name[0] if current_user and current_user.name else 'D' }}
+                </div>
+                <div>
+                    <div style="font-size: 0.825rem; font-weight: 700; color: var(--slate-900);">
+                        Dr. {{ current_user.name if current_user else 'Physician' }}
+                    </div>
+                    <div style="font-size: 0.725rem; color: var(--slate-500);">
+                        {{ current_user.doctor_id if current_user else 'DOC-0000' }} &bull; {{ current_user.specialty if current_user else 'Radiology' }}
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm" title="Sign out securely">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign Out
+            </a>
+        </div>
+    </div>
+</header>
 {% endblock %}
 
 {% block content %}
-<style>
-    .upload-area {
-        border: 2px dashed #CBD5E0;
-        border-radius: 10px;
-        padding: 4rem 2rem;
-        text-align: center;
-        background-color: #FAFCFF;
-        margin-bottom: 2rem;
-        cursor: pointer;
-    }
-    .supported-formats { font-size: 0.9rem; color: #718096; margin-top: 1rem; }
-    .guidelines { margin-top: 2rem; }
-    .guidelines li { margin-bottom: 0.5rem; margin-left: 1.5rem; }
-</style>
-
-<h2>Doctor Dashboard</h2>
-<p style="margin-bottom: 2rem; color: #4A5568;">Upload a patient scan to initiate AI-assisted analysis.</p>
-
-<div class="card">
-    <form action="{{ url_for('analyze') }}" method="POST" enctype="multipart/form-data">
-        <div class="upload-area" onclick="document.getElementById('file-upload').click()">
-            <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Click to Upload Medical Image</h3>
-            <p>or drag and drop file here</p>
-            <p class="supported-formats">Focus on supported X-ray, CT, and MRI images[cite: 1].</p>
-            <input type="file" id="file-upload" name="scan_image" style="display: none;" accept="image/*" required>
+<div class="container">
+    <!-- Quick Performance & System Status Bar -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div>
+                <div class="stat-label">Total Scans Evaluated</div>
+                <div class="stat-value">{{ stats.total_scans }}</div>
+            </div>
+            <div style="width: 42px; height: 42px; background: var(--teal-50); color: var(--teal-600); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
         </div>
-        <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem;">Run Analysis Pipeline</button>
-    </form>
-</div>
 
-<div class="card guidelines" style="margin-top: 2rem;">
-    <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">Pipeline Overview</h3>
-    <ul>
-        <li><strong>Validation:</strong> The system checks format, integrity, dimensions, and quality before processing[cite: 1].</li>
-        <li><strong>Preprocessing:</strong> Images undergo resizing, normalization, enhancement, and registration[cite: 1].</li>
-        <li><strong>Explainability:</strong> The system generates Grad-CAM heatmaps, selected feature maps, and activation statistics to show how the CNN analyses the image[cite: 1].</li>
-    </ul>
+        <div class="stat-card">
+            <div>
+                <div class="stat-label">Mean Confidence Score</div>
+                <div class="stat-value text-teal">{{ stats.avg_confidence }}%</div>
+            </div>
+            <div style="width: 42px; height: 42px; background: var(--emerald-50); color: var(--emerald-600); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div>
+                <div class="stat-label">Active Inference Core</div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: var(--slate-800); margin-top: 0.25rem;">ResNet-50 / DenseNet</div>
+            </div>
+            <div style="width: 42px; height: 42px; background: var(--blue-50); color: var(--blue-600); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div>
+                <div class="stat-label">Explainability Core</div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: var(--emerald-600); margin-top: 0.25rem;">Grad-CAM Ready</div>
+            </div>
+            <div style="width: 42px; height: 42px; background: var(--emerald-50); color: var(--emerald-600); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Two-Column Layout -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2.5rem;">
+        <!-- Left: Upload & Inference Intake Card -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h3>Patient Scan Intake & Analysis</h3>
+                    <p style="font-size: 0.875rem; margin-top: 0.25rem;">Upload radiological scan to trigger multi-stage preprocessing, CNN inference, and Grad-CAM generation.</p>
+                </div>
+                <span class="badge badge-teal">Step 1 of 2</span>
+            </div>
+
+            <form action="{{ url_for('analyze') }}" method="POST" enctype="multipart/form-data" id="analysis-form">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="patient_id">Patient Identifier / Record #</label>
+                        <input type="text" id="patient_id" name="patient_id" class="form-input" placeholder="e.g. PT-2026-104" value="PT-{{ range(1000, 9999) | random }}">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="modality">Imaging Modality</label>
+                        <select id="modality" name="modality" class="form-select">
+                            <option value="Chest X-Ray (PA View)">Chest X-Ray (PA View)</option>
+                            <option value="Chest X-Ray (AP View)">Chest X-Ray (AP View)</option>
+                            <option value="Computed Tomography (CT Thorax)">Computed Tomography (CT Thorax)</option>
+                            <option value="Brain Magnetic Resonance (MRI)">Brain Magnetic Resonance (MRI)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Drag and Drop Zone -->
+                <div class="upload-dropzone" id="drop-zone" onclick="document.getElementById('scan_image').click()">
+                    <input type="file" id="scan_image" name="scan_image" accept="image/png, image/jpeg, image/tiff, .dcm" style="display: none;" onchange="handleFileSelect(this)">
+                    
+                    <div id="upload-prompt">
+                        <div class="upload-icon-circle">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--slate-800);">
+                            Click to upload or drag & drop medical scan
+                        </div>
+                        <p style="font-size: 0.85rem; margin-top: 0.35rem;">
+                            Supports DICOM slices, high-res PNG, JPEG, and TIFF (up to 16MB)
+                        </p>
+                    </div>
+
+                    <!-- Live Image Preview Card -->
+                    <div id="preview-box" class="preview-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <span style="font-size: 0.825rem; font-weight: 700; color: var(--teal-700);">Scan Loaded For Inference</span>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="clearFileSelection(event)">Remove</button>
+                        </div>
+                        <img id="preview-img" class="preview-thumbnail" src="#" alt="Scan Preview">
+                        <div id="file-info" style="font-size: 0.775rem; color: var(--slate-500); text-align: center; margin-top: 0.5rem;"></div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1.25rem;">
+                    <label class="form-label" for="clinical_notes">Clinical Indications & Patient Symptoms (Optional)</label>
+                    <textarea id="clinical_notes" name="clinical_notes" class="form-textarea" rows="2" placeholder="e.g. 48-year-old presenting with dyspnea, fever, and persistent rales in right lower base..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Run Deep Learning & Grad-CAM Analysis
+                </button>
+            </form>
+        </div>
+
+        <!-- Right: Verification & Pipeline Specs Card -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Clinical Pipeline Protocol</h4>
+                    <span class="badge badge-emerald">Automated</span>
+                </div>
+
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 1.15rem; font-size: 0.875rem;">
+                    <li style="display: flex; gap: 0.75rem;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--teal-50); color: var(--teal-600); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">1</div>
+                        <div>
+                            <strong style="color: var(--slate-900);">Quality & Integrity Validation</strong>
+                            <p style="font-size: 0.8rem; margin-top: 0.15rem;">Automated validation checks pixel depth, histogram distribution, and motion artifacts.</p>
+                        </div>
+                    </li>
+
+                    <li style="display: flex; gap: 0.75rem;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--teal-50); color: var(--teal-600); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">2</div>
+                        <div>
+                            <strong style="color: var(--slate-900);">Multi-Scale CNN Inference</strong>
+                            <p style="font-size: 0.8rem; margin-top: 0.15rem;">Evaluates pathological activations across convolutional layers to compute confidence.</p>
+                        </div>
+                    </li>
+
+                    <li style="display: flex; gap: 0.75rem;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--teal-50); color: var(--teal-600); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">3</div>
+                        <div>
+                            <strong style="color: var(--slate-900);">Grad-CAM Heatmap Generation</strong>
+                            <p style="font-size: 0.8rem; margin-top: 0.15rem;">Produces gradient-weighted activation overlays ensuring transparent explainability.</p>
+                        </div>
+                    </li>
+
+                    <li style="display: flex; gap: 0.75rem;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--teal-50); color: var(--teal-600); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">4</div>
+                        <div>
+                            <strong style="color: var(--slate-900);">Reliability Scoring</strong>
+                            <p style="font-size: 0.8rem; margin-top: 0.15rem;">Computes prediction stability index to prevent out-of-distribution hallucinations.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #f0fdfa, #eff6ff); border-color: var(--teal-100);">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span style="font-weight: 700; font-size: 0.95rem; color: var(--slate-800);">Physician Review Required</span>
+                </div>
+                <p style="font-size: 0.825rem; color: var(--slate-600); line-height: 1.5;">
+                    MedicMitra acts strictly as a computer-aided triage and decision support system. Final diagnostic sign-off must always be executed by a certified physician.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Diagnostic History Table -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3>Recent Clinical Evaluations</h3>
+                <p style="font-size: 0.85rem; margin-top: 0.25rem;">Previously analyzed scans and verified physician diagnostic records.</p>
+            </div>
+            <a href="{{ url_for('results') }}" class="btn btn-outline btn-sm">View Latest Inference &rarr;</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="clinical-table">
+                <thead>
+                    <tr>
+                        <th>Patient ID</th>
+                        <th>Scan Modality</th>
+                        <th>Condition Prediction</th>
+                        <th>Confidence</th>
+                        <th>Reliability Index</th>
+                        <th>Evaluation Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in recent_scans %}
+                    <tr>
+                        <td style="font-weight: 700; color: var(--slate-900);">{{ scan.patient_id }}</td>
+                        <td>{{ scan.modality }}</td>
+                        <td>
+                            {% if 'Normal' in scan.condition_predicted %}
+                                <span class="badge badge-emerald">{{ scan.condition_predicted }}</span>
+                            {% elif 'Pneumonia' in scan.condition_predicted %}
+                                <span class="badge badge-rose">{{ scan.condition_predicted }}</span>
+                            {% else %}
+                                <span class="badge badge-amber">{{ scan.condition_predicted }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 600;">{{ scan.confidence_score }}%</td>
+                        <td>
+                            <span class="badge badge-teal">{{ scan.stability }} ({{ scan.reliability_index }})</span>
+                        </td>
+                        <td style="color: var(--slate-500); font-size: 0.825rem;">{{ scan.created_at.strftime('%b %d, %Y - %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('results', scan_id=scan.id) }}" class="btn btn-outline btn-sm" style="padding: 0.25rem 0.65rem;">View Report</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('scan_image');
+    const previewBox = document.getElementById('preview-box');
+    const previewImg = document.getElementById('preview-img');
+    const uploadPrompt = document.getElementById('upload-prompt');
+    const fileInfo = document.getElementById('file-info');
+
+    // Drag and Drop Effects
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('dragover');
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            displayPreview(files[0]);
+        }
+    });
+
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            displayPreview(input.files[0]);
+        }
+    }
+
+    function displayPreview(file) {
+        uploadPrompt.style.display = 'none';
+        previewBox.style.display = 'block';
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        const fileSizeKB = (file.size / 1024).toFixed(1);
+        fileInfo.innerHTML = `<strong>${file.name}</strong> &bull; ${fileSizeKB} KB &bull; Ready for CNN Processing`;
+    }
+
+    function clearFileSelection(e) {
+        e.stopPropagation();
+        fileInput.value = '';
+        previewImg.src = '#';
+        previewBox.style.display = 'none';
+        uploadPrompt.style.display = 'block';
+    }
+</script>
 {% endblock %}
